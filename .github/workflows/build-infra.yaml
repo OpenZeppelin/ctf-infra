@@ -16,9 +16,9 @@ on:
 
 env:
   # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
+  REGISTRY: us-docker.pkg.dev
   # github.repository as <account>/<repo>
-  IMAGE_NAME: fuzzland/blaz-ctf-2023-server
+  IMAGE_NAME: idyllic-adviser-409615/openzeppelin/ctf-2023-server
 
 jobs:
   build:

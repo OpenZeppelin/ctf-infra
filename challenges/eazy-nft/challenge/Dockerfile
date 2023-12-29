@@ -8,7 +8,7 @@ RUN true && \
     forge build --out /artifacts/out --cache-path /artifacts/cache && \
     true
 
-FROM ghcr.io/fuzzland/blaz-ctf-2023-server:latest as chroot
+FROM us-docker.pkg.dev/idyllic-adviser-409615/openzeppelin/ctf-2023-server:latest as chroot
 
 FROM gcr.io/paradigmxyz/ctf/kctf-challenge:latest
 

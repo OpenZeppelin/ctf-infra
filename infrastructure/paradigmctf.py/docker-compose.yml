@@ -15,7 +15,7 @@ services:
 
   ctf-server-orchestrator:
     container_name: orchestrator
-    image: ghcr.io/fuzzland/blaz-ctf-2023-server:latest
+    image: us-docker.pkg.dev/idyllic-adviser-409615/openzeppelin/ctf-2023-server:latest
     build: .
     user: root
     command: uvicorn ctf_server:orchestrator --host 0.0.0.0 --port 7283
@@ -34,7 +34,7 @@ services:
 
   ctf-server-anvil-proxy:
     container_name: anvil-proxy
-    image: ghcr.io/fuzzland/blaz-ctf-2023-server:latest
+    image: us-docker.pkg.dev/idyllic-adviser-409615/openzeppelin/ctf-2023-server:latest
     build: .
     command: uvicorn ctf_server:anvil_proxy --host 0.0.0.0 --port 8545
     ports:
@@ -49,7 +49,7 @@ services:
 
   http-proxy:
     container_name: http-proxy
-    image: ghcr.io/fuzzland/blaz-ctf-2023-server:latest
+    image: us-docker.pkg.dev/idyllic-adviser-409615/openzeppelin/ctf-2023-server:latest
     build: .
     command: uvicorn ctf_server:http_proxy --host 0.0.0.0 --port 80
     ports:

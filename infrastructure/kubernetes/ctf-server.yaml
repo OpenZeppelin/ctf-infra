@@ -96,7 +96,7 @@ spec:
         runAsNonRoot: true
       containers:
       - name: orchestrator
-        image: ghcr.io/fuzzland/blaz-ctf-2023-server:latest
+        image: us-docker.pkg.dev/idyllic-adviser-409615/openzeppelin/ctf-2023-server:latest
         command: ["uvicorn", "--host", "0.0.0.0", "--port", "7283", "--workers", "3", "ctf_server:orchestrator"]
         env:
         - name: BACKEND
@@ -148,7 +148,7 @@ spec:
         runAsNonRoot: true
       containers:
       - name: anvil-proxy
-        image: ghcr.io/fuzzland/blaz-ctf-2023-server:latest
+        image: us-docker.pkg.dev/idyllic-adviser-409615/openzeppelin/ctf-2023-server:latest
         command: ["uvicorn", "--host", "0.0.0.0", "--port", "8545", "--workers", "4", "ctf_server:anvil_proxy"]
         env:
         - name: DATABASE
@@ -199,7 +199,7 @@ spec:
         runAsNonRoot: true
       containers:
       - name: http-proxy
-        image: ghcr.io/fuzzland/blaz-ctf-2023-server:latest
+        image: us-docker.pkg.dev/idyllic-adviser-409615/openzeppelin/ctf-2023-server:latest
         command: ["uvicorn", "--host", "0.0.0.0", "--port", "8080", "--workers", "4", "ctf_server:http_proxy"]
         env:
         - name: DATABASE
