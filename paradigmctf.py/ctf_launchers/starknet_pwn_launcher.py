@@ -1,23 +1,21 @@
 import os
 
-from eth_abi import abi
 import requests
 from ctf_launchers.launcher import Action, Launcher, ORCHESTRATOR_HOST, CHALLENGE
 from ctf_launchers.team_provider import TeamProvider, get_team_provider
-from ctf_server.types import UserData, get_privileged_web3
-from web3 import Web3
+from ctf_server.types import UserData
 
 FLAG = os.getenv("FLAG", "PCTF{flag}")
 
 
-class PwnChallengeLauncher(Launcher):
+class StarknetPwnChallengeLauncher(Launcher):
     def __init__(
         self,
         project_location: str = "challenge/project",
         provider: TeamProvider = get_team_provider(),
     ):
         super().__init__(
-            'ethereum',
+            'starknet',
             project_location,
             provider,
             [
@@ -43,15 +41,16 @@ class PwnChallengeLauncher(Launcher):
         return 0
 
     def is_solved(self, user_data: UserData, addr: str) -> bool:
-        web3 = get_privileged_web3(user_data, "main")
+        # web3 = get_privileged_web3(user_data, "main")
 
-        (result,) = abi.decode(
-            ["bool"],
-            web3.eth.call(
-                {
-                    "to": addr,
-                    "data": web3.keccak(text="isSolved()")[:4],
-                }
-            ),
-        )
-        return result
+        # (result,) = abi.decode(
+        #     ["bool"],
+        #     web3.eth.call(
+        #         {
+        #             "to": addr,
+        #             "data": web3.keccak(text="isSolved()")[:4],
+        #         }
+        #     ),
+        # )
+        # return result
+        return False

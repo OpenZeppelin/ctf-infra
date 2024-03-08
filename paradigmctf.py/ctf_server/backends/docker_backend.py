@@ -36,27 +36,50 @@ class DockerBackend(Backend):
 
         anvil_containers: Dict[str, Container] = {}
         for anvil_id, anvil_args in request["anvil_instances"].items():
-            anvil_containers[anvil_id] = self.__client.containers.run(
-                name=f"{instance_id}-{anvil_id}",
-                image=anvil_args.get("image", DEFAULT_IMAGE),
-                network="paradigmctf",
-                entrypoint=["sh", "-c"],
-                command=[
-                    "while true; do anvil "
-                    + " ".join(
-                        [
-                            shlex.quote(str(v))
-                            for v in format_anvil_args(anvil_args, anvil_id)
-                        ]
-                    )
-                    + "; sleep 1; done;"
-                ],
-                restart_policy={"Name": "always"},
-                detach=True,
-                mounts=[
-                    Mount(target="/data", source=volume.id),
-                ],
-            )
+            if request["type"] == "starknet":
+                anvil_containers[anvil_id] = self.__client.containers.run(
+                    name=f"{instance_id}-{anvil_id}",
+                    image=anvil_args.get("image", "shardlabs/starknet-devnet-rs"),
+                    network="paradigmctf",
+                    entrypoint=["sh", "-c"],
+                    # command=[
+                    #     "while true; do anvil "
+                    #     + " ".join(
+                    #         [
+                    #             shlex.quote(str(v))
+                    #             for v in format_anvil_args(anvil_args, anvil_id)
+                    #         ]
+                    #     )
+                    #     + "; sleep 1; done;"
+                    # ],
+                    restart_policy={"Name": "always"},
+                    detach=True,
+                    mounts=[
+                        Mount(target="/data", source=volume.id),
+                    ],
+                )
+            else:
+                anvil_containers[anvil_id] = self.__client.containers.run(
+                    name=f"{instance_id}-{anvil_id}",
+                    image=anvil_args.get("image", DEFAULT_IMAGE),
+                    network="paradigmctf",
+                    entrypoint=["sh", "-c"],
+                    command=[
+                        "while true; do anvil "
+                        + " ".join(
+                            [
+                                shlex.quote(str(v))
+                                for v in format_anvil_args(anvil_args, anvil_id)
+                            ]
+                        )
+                        + "; sleep 1; done;"
+                    ],
+                    restart_policy={"Name": "always"},
+                    detach=True,
+                    mounts=[
+                        Mount(target="/data", source=volume.id),
+                    ],
+                )
 
         daemon_containers: Dict[str, Container] = {}
         for daemon_id, daemon_args in request.get("daemon_instances", {}).items():

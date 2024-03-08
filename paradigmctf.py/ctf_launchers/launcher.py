@@ -33,8 +33,9 @@ class Action:
 
 class Launcher(abc.ABC):
     def __init__(
-        self, project_location: str, provider: TeamProvider, actions: List[Action] = []
+        self, type: str, project_location: str, provider: TeamProvider, actions: List[Action] = []
     ):
+        self.type = type
         self.project_location = project_location
         self.__team_provider = provider
 
@@ -105,6 +106,7 @@ class Launcher(abc.ABC):
         body = requests.post(
             f"{ORCHESTRATOR_HOST}/instances",
             json=CreateInstanceRequest(
+                type=self.type,
                 instance_id=self.get_instance_id(),
                 timeout=TIMEOUT,
                 anvil_instances=self.get_anvil_instances(),
