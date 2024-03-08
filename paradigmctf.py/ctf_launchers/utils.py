@@ -72,7 +72,7 @@ def deploy(
 def deploy_cairo(
     web3: Web3,
     project_location: str,
-    mnemonic: str,
+    credentials: list,
     deploy_script: str = "scripts/deploy.ts",
     env: Dict = {},
 ) -> str:
@@ -87,8 +87,8 @@ def deploy_cairo(
         ],
         env={
             "RPC_URL": web3.provider.endpoint_uri,
-            "PRIVATE_KEY": "0x",
-            "ACCOUNT_ADDRESS": "0x",
+            "PRIVATE_KEY": credentials[0][1],
+            "ACCOUNT_ADDRESS": credentials[0][0],
         }
         | env,
         pass_fds=[wfd],

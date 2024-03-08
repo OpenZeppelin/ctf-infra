@@ -103,12 +103,13 @@ class DockerBackend(Backend):
             url = f"http://{anvil_instances[anvil_id]['ip']}:{anvil_instances[anvil_id]['port']}"
 
             if request["type"] == "starknet":
-                self._prepare_node_starknet(
-                    request["anvil_instances"][anvil_id],
-                    Web3(
-                        Web3.HTTPProvider(url)
-                    ),
-                )
+                # self._prepare_node_starknet(
+                #     request["anvil_instances"][anvil_id],
+                #     Web3(
+                #         Web3.HTTPProvider(url)
+                #     ),
+                # )
+                pass
             else:
                 self._prepare_node(
                     request["anvil_instances"][anvil_id],

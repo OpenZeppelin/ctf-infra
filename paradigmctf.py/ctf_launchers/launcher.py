@@ -1,8 +1,11 @@
 import abc
 import os
 import traceback
+import random
 from dataclasses import dataclass
 from typing import Callable, Dict, List
+import requests
+import json
 
 import requests
 from ctf_launchers.team_provider import TeamProvider
@@ -49,7 +52,14 @@ class Launcher(abc.ABC):
         if not self.team:
             exit(1)
 
-        self.mnemonic = generate_mnemonic(12, lang="english")
+        if self.type == "starknet":
+            random_generator = random.Random()
+
+            deployer_private_key = random_generator.getrandbits(128)
+
+            self.mnemonic = str(deployer_private_key)
+        else:
+            self.mnemonic = generate_mnemonic(12, lang="english")
 
         for i, action in enumerate(self._actions):
             print(f"{i+1} - {action.name}")
@@ -119,7 +129,16 @@ class Launcher(abc.ABC):
         user_data = body["data"]
 
         print("deploying challenge...")
-        challenge_addr = self.deploy(user_data, self.mnemonic)
+
+        if self.type == "starknet":
+            web3 = get_privileged_web3(user_data, "main")
+            credentials = self.get_credentials(web3.provider.endpoint_uri)
+
+            challenge_addr = self.deploy_cairo(user_data, credentials)
+            priv_key = credentials[1][1]
+        else:
+            challenge_addr = self.deploy(user_data, self.mnemonic)
+            priv_key = get_player_account(self.mnemonic).key.hex()
 
         self.update_metadata(
             {"mnemonic": self.mnemonic, "challenge_address": challenge_addr}
@@ -134,14 +153,17 @@ class Launcher(abc.ABC):
         print(f"rpc endpoints:")
         for id in user_data["anvil_instances"]:
             print(f"    - {PUBLIC_HOST}/{user_data['external_id']}/{id}")
-            print(f"    - {PUBLIC_WEBSOCKET_HOST}/{user_data['external_id']}/{id}/ws")
+            print(
+                f"    - {PUBLIC_WEBSOCKET_HOST}/{user_data['external_id']}/{id}/ws")
 
-        print(f"private key:        {get_player_account(self.mnemonic).key.hex()}")
+        print(
+            f"private key:        {priv_key}")
         print(f"challenge contract: {challenge_addr}")
         return 0
 
     def kill_instance(self) -> int:
-        resp = requests.delete(f"{ORCHESTRATOR_HOST}/instances/${self.get_instance_id()}")
+        resp = requests.delete(
+            f"{ORCHESTRATOR_HOST}/instances/${self.get_instance_id()}")
         body = resp.json()
 
         print(body["message"])
@@ -150,12 +172,30 @@ class Launcher(abc.ABC):
     def deploy(self, user_data: UserData, mnemonic: str) -> str:
         web3 = get_privileged_web3(user_data, "main")
 
-        if self.type == "starknet":
-            return self.deploy_cairo(web3, self.project_location, mnemonic, env=self.get_deployment_args(user_data))
-        else:
-            return deploy(
-                web3, self.project_location, mnemonic, env=self.get_deployment_args(user_data)
-            )
+        return deploy(
+            web3, self.project_location, mnemonic, env=self.get_deployment_args(
+                user_data)
+        )
+        
+    def deploy_cairo(self, user_data: UserData, credentials: list) -> str:
+        web3 = get_privileged_web3(user_data, "main")
+
+        return self.deploy_cairo(web3, self.project_location, credentials, env=self.get_deployment_args(user_data))
+    
 
     def get_deployment_args(self, user_data: UserData) -> Dict[str, str]:
         return {}
+
+    def get_credentials(url: str) -> list:
+        x = json.loads(requests.get(url + '/predeployed_accounts').text)
+
+        system = []
+        player = []
+
+        system.append(x[0]['address'])
+        system.append(x[0]['private_key'])
+
+        player.append(x[1]['address'])
+        player.append(x[1]['private_key'])
+
+        return [system, player]
