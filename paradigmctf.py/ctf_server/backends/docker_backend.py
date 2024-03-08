@@ -102,8 +102,6 @@ class DockerBackend(Backend):
 
             url = f"http://{anvil_instances[anvil_id]['ip']}:{anvil_instances[anvil_id]['port']}"
 
-            logging.info("url %s %s", url, type(url))
-
             if request["type"] == "starknet":
                 self._prepare_node_starknet(
                     request["anvil_instances"][anvil_id],

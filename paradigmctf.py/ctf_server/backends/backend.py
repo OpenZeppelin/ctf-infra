@@ -106,9 +106,9 @@ class Backend(abc.ABC):
                 break
             except:
                 time.sleep(0.1)
-                continue
 
         for i in range(args.get("accounts", DEFAULT_ACCOUNTS)):
+            # TODO: use starknet address instaed of normal evm one
             starknet_setBalance(
                 web3,
                 self.__derive_account(
