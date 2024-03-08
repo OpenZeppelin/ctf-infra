@@ -18,7 +18,9 @@ from ctf_server.types import (
 from eth_account import Account
 from eth_account.hdaccount import key_from_seed, seed_from_mnemonic
 from foundry.anvil import anvil_setBalance
+from starknet.anvil import starknet_setBalance
 from web3 import Web3
+from starknet_py.net.full_node_client import FullNodeClient
 
 
 class InstanceExists(Exception):
@@ -96,4 +98,20 @@ class Backend(abc.ABC):
                     i,
                 ).address,
                 hex(int(args.get("balance", DEFAULT_BALANCE) * 10**18)),
+            )
+
+    def _prepare_node_starknet(self, args: LaunchAnvilInstanceArgs, web3: FullNodeClient):
+        while type(web3.get_chain_id_sync()) != str:
+            time.sleep(0.1)
+            continue
+
+        for i in range(args.get("accounts", DEFAULT_ACCOUNTS)):
+            starknet_setBalance(
+                web3,
+                self.__derive_account(
+                    args.get("derivation_path", DEFAULT_DERIVATION_PATH),
+                    args.get("mnemonic", DEFAULT_MNEMONIC),
+                    i,
+                ).address,
+                int(args.get("balance", DEFAULT_BALANCE) * 10**18),
             )

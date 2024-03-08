@@ -36,22 +36,13 @@ class DockerBackend(Backend):
 
         anvil_containers: Dict[str, Container] = {}
         for anvil_id, anvil_args in request["anvil_instances"].items():
+            print(request)
             if request["type"] == "starknet":
                 anvil_containers[anvil_id] = self.__client.containers.run(
                     name=f"{instance_id}-{anvil_id}",
                     image=anvil_args.get("image", "shardlabs/starknet-devnet-rs"),
                     network="paradigmctf",
-                    entrypoint=["sh", "-c"],
-                    # command=[
-                    #     "while true; do anvil "
-                    #     + " ".join(
-                    #         [
-                    #             shlex.quote(str(v))
-                    #             for v in format_anvil_args(anvil_args, anvil_id)
-                    #         ]
-                    #     )
-                    #     + "; sleep 1; done;"
-                    # ],
+                    entrypoint=["tini", "--", "starknet-devnet", "--host", "0.0.0.0", "--port", "8545"],
                     restart_policy={"Name": "always"},
                     detach=True,
                     mounts=[
