@@ -50,7 +50,6 @@ multidict==6.0.4
 mypy-extensions==1.0.0
 oauthlib==3.2.2
 packaging==23.2
-paradigmctf.py==1.0.0
 paramiko==3.3.1
 parsimonious==0.9.0
 plumbum==1.8.2

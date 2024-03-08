@@ -64,6 +64,14 @@ def format_anvil_args(args: LaunchAnvilInstanceArgs, anvil_id: str, port: int = 
 
     return cmd_args
 
+def format_starknet_args(args: LaunchAnvilInstanceArgs, anvil_id: str, port: int = 8545) -> List[str]:
+    cmd_args = []
+    cmd_args += ["--host", "0.0.0.0"]
+    cmd_args += ["--port", str(port)]
+    cmd_args += ["--accounts", "0"]
+
+    return cmd_args
+
 
 class DaemonInstanceArgs(TypedDict):
     image: str
