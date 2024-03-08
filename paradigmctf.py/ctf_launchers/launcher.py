@@ -150,9 +150,12 @@ class Launcher(abc.ABC):
     def deploy(self, user_data: UserData, mnemonic: str) -> str:
         web3 = get_privileged_web3(user_data, "main")
 
-        return deploy(
-            web3, self.project_location, mnemonic, env=self.get_deployment_args(user_data)
-        )
+        if self.type == "starknet":
+            return self.deploy_cairo(web3, self.project_location, mnemonic, env=self.get_deployment_args(user_data))
+        else:
+            return deploy(
+                web3, self.project_location, mnemonic, env=self.get_deployment_args(user_data)
+            )
 
     def get_deployment_args(self, user_data: UserData) -> Dict[str, str]:
         return {}
