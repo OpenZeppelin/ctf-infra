@@ -20,7 +20,7 @@ from ctf_server.types import (
 from eth_account import Account
 from eth_account.hdaccount import key_from_seed, seed_from_mnemonic
 from foundry.anvil import anvil_setBalance
-from starknet.anvil import starknet_setBalance, starknet_getVersion
+from starknet.anvil import starknet_getVersion
 from web3 import Web3
 
 
