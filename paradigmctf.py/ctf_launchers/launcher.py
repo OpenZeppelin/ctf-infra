@@ -1,12 +1,10 @@
 import abc
 import os
 import traceback
-import random
 from dataclasses import dataclass
 from typing import Callable, Dict, List
 import requests
 import json
-import time
 
 import requests
 from ctf_launchers.team_provider import TeamProvider
@@ -53,14 +51,7 @@ class Launcher(abc.ABC):
         if not self.team:
             exit(1)
 
-        if self.type == "starknet":
-            random_generator = random.Random()
-
-            deployer_private_key = random_generator.getrandbits(128)
-
-            self.mnemonic = str(deployer_private_key)
-        else:
-            self.mnemonic = generate_mnemonic(12, lang="english")
+        self.mnemonic = generate_mnemonic(12, lang="english")
 
         for i, action in enumerate(self._actions):
             print(f"{i+1} - {action.name}")
@@ -132,12 +123,9 @@ class Launcher(abc.ABC):
         print("deploying challenge...")
 
         if self.type == "starknet":
-            print('calling predeployed_accounts...')
             web3 = get_privileged_web3(user_data, "main")
             
             credentials = self.get_credentials(web3.provider.endpoint_uri)
-
-            print('calling deploy script...')
 
             challenge_addr = self.deploy_cairo(user_data, credentials)
             priv_key = credentials[1][1]
@@ -153,7 +141,7 @@ class Launcher(abc.ABC):
 
         print()
         print(f"your private blockchain has been set up")
-        print(f"it will automatically terminate in {TIMEOUT/60} minutes")
+        print(f"it will automatically terminate in {round(TIMEOUT/60)} minutes")
         print(f"---")
         print(f"rpc endpoints:")
         for id in user_data["anvil_instances"]:
@@ -161,6 +149,8 @@ class Launcher(abc.ABC):
             print(
                 f"    - {PUBLIC_WEBSOCKET_HOST}/{user_data['external_id']}/{id}/ws")
 
+        if self.type == "starknet":
+            print(f"player address:     {credentials[1][0]}")
         print(
             f"private key:        {priv_key}")
         print(f"challenge contract: {challenge_addr}")
