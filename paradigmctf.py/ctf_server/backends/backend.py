@@ -4,6 +4,8 @@ import random
 import string
 import time
 from threading import Thread
+import requests
+import json
 
 from ctf_server.databases.database import Database
 from ctf_server.types import (
@@ -18,6 +20,7 @@ from ctf_server.types import (
 from eth_account import Account
 from eth_account.hdaccount import key_from_seed, seed_from_mnemonic
 from foundry.anvil import anvil_setBalance
+from starknet.anvil import starknet_getVersion
 from web3 import Web3
 
 
@@ -97,3 +100,11 @@ class Backend(abc.ABC):
                 ).address,
                 hex(int(args.get("balance", DEFAULT_BALANCE) * 10**18)),
             )
+
+    def _prepare_node_starknet(self, args: LaunchAnvilInstanceArgs, web3: Web3):
+        while True:
+            try:
+                starknet_getVersion(web3)
+                break
+            except:
+                time.sleep(0.1)

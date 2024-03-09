@@ -3,10 +3,12 @@ import os
 import traceback
 from dataclasses import dataclass
 from typing import Callable, Dict, List
+import requests
+import json
 
 import requests
 from ctf_launchers.team_provider import TeamProvider
-from ctf_launchers.utils import deploy, http_url_to_ws
+from ctf_launchers.utils import deploy, deploy_cairo, http_url_to_ws
 from ctf_server.types import (
     CreateInstanceRequest,
     DaemonInstanceArgs,
@@ -33,8 +35,9 @@ class Action:
 
 class Launcher(abc.ABC):
     def __init__(
-        self, project_location: str, provider: TeamProvider, actions: List[Action] = []
+        self, type: str, project_location: str, provider: TeamProvider, actions: List[Action] = []
     ):
+        self.type = type
         self.project_location = project_location
         self.__team_provider = provider
 
@@ -105,6 +108,7 @@ class Launcher(abc.ABC):
         body = requests.post(
             f"{ORCHESTRATOR_HOST}/instances",
             json=CreateInstanceRequest(
+                type=self.type,
                 instance_id=self.get_instance_id(),
                 timeout=TIMEOUT,
                 anvil_instances=self.get_anvil_instances(),
@@ -117,7 +121,17 @@ class Launcher(abc.ABC):
         user_data = body["data"]
 
         print("deploying challenge...")
-        challenge_addr = self.deploy(user_data, self.mnemonic)
+
+        if self.type == "starknet":
+            web3 = get_privileged_web3(user_data, "main")
+            
+            credentials = self.get_credentials(web3.provider.endpoint_uri)
+
+            challenge_addr = self.deploy_cairo(user_data, credentials)
+            priv_key = credentials[1][1]
+        else:
+            challenge_addr = self.deploy(user_data, self.mnemonic)
+            priv_key = get_player_account(self.mnemonic).key.hex()
 
         self.update_metadata(
             {"mnemonic": self.mnemonic, "challenge_address": challenge_addr}
@@ -127,19 +141,24 @@ class Launcher(abc.ABC):
 
         print()
         print(f"your private blockchain has been set up")
-        print(f"it will automatically terminate in {TIMEOUT} minutes")
+        print(f"it will automatically terminate in {round(TIMEOUT/60)} minutes")
         print(f"---")
         print(f"rpc endpoints:")
         for id in user_data["anvil_instances"]:
             print(f"    - {PUBLIC_HOST}/{user_data['external_id']}/{id}")
-            print(f"    - {PUBLIC_WEBSOCKET_HOST}/{user_data['external_id']}/{id}/ws")
+            print(
+                f"    - {PUBLIC_WEBSOCKET_HOST}/{user_data['external_id']}/{id}/ws")
 
-        print(f"private key:        {get_player_account(self.mnemonic).key.hex()}")
+        if self.type == "starknet":
+            print(f"player address:     {credentials[1][0]}")
+        print(
+            f"private key:        {priv_key}")
         print(f"challenge contract: {challenge_addr}")
         return 0
 
     def kill_instance(self) -> int:
-        resp = requests.delete(f"{ORCHESTRATOR_HOST}/instances/${self.get_instance_id()}")
+        resp = requests.delete(
+            f"{ORCHESTRATOR_HOST}/instances/{self.get_instance_id()}")
         body = resp.json()
 
         print(body["message"])
@@ -149,8 +168,30 @@ class Launcher(abc.ABC):
         web3 = get_privileged_web3(user_data, "main")
 
         return deploy(
-            web3, self.project_location, mnemonic, env=self.get_deployment_args(user_data)
+            web3, self.project_location, mnemonic, env=self.get_deployment_args(
+                user_data)
         )
+        
+    def deploy_cairo(self, user_data: UserData, credentials: list) -> str:
+        web3 = get_privileged_web3(user_data, "main")
+
+        return deploy_cairo(web3, self.project_location, credentials, env=self.get_deployment_args(user_data))
+    
 
     def get_deployment_args(self, user_data: UserData) -> Dict[str, str]:
         return {}
+
+    def get_credentials(self, url: str) -> list:
+        x = requests.get(url + '/predeployed_accounts')
+        data = json.loads(x.text)
+
+        system = []
+        player = []
+
+        system.append(data[0]['address'])
+        system.append(data[0]['private_key'])
+
+        player.append(data[1]['address'])
+        player.append(data[1]['private_key'])
+
+        return [system, player]

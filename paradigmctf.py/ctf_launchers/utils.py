@@ -69,6 +69,46 @@ def deploy(
     return result
 
 
+def deploy_cairo(
+    web3: Web3,
+    project_location: str,
+    credentials: list,
+    deploy_script: str = "deploy.py",
+    env: Dict = {},
+) -> str:
+    rfd, wfd = os.pipe2(os.O_NONBLOCK)
+
+    proc = subprocess.Popen(
+        args=[
+            "/usr/local/bin/python3",
+            deploy_script,
+        ],
+        env={
+            "RPC_URL": web3.provider.endpoint_uri + "/rpc",
+            "PRIVATE_KEY": credentials[0][1],
+            "ACCOUNT_ADDRESS": credentials[0][0],
+        }
+        | env,
+        pass_fds=[wfd],
+        cwd=project_location,
+        text=True,
+        encoding="utf8",
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stdout, stderr = proc.communicate()
+
+    if proc.returncode != 0:
+        print(stdout)
+        print(stderr)
+        raise Exception("script failed to run")
+
+    output = stdout.split('address: ')[1].replace("\\n", "")
+
+    return output[:65]
+
+
 def anvil_setCodeFromFile(
     web3: Web3,
     addr: str,

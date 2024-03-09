@@ -12,7 +12,7 @@ import websockets
 from .utils import load_database
 
 
-ALLOWED_NAMESPACES = ["web3", "eth", "net"]
+ALLOWED_NAMESPACES = ["web3", "eth", "net", "starknet"]
 DISALLOWED_METHODS = [
     "eth_sign",
     "eth_signTransaction",

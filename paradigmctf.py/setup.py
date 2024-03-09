@@ -14,5 +14,5 @@ setup(
         "docker==6.1.3",
         "pwntools==4.11.0",
     ],
-    py_modules=["foundry", "ctf_server", "ctf_launchers", "ctf_solvers"],
+    py_modules=["foundry", "starknet", "ctf_server", "ctf_launchers", "ctf_solvers"],
 )

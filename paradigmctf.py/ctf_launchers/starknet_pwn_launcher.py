@@ -1,23 +1,21 @@
 import os
-
-from eth_abi import abi
+import json
 import requests
 from ctf_launchers.launcher import Action, Launcher, ORCHESTRATOR_HOST, CHALLENGE
 from ctf_launchers.team_provider import TeamProvider, get_team_provider
 from ctf_server.types import UserData, get_privileged_web3
-from web3 import Web3
 
 FLAG = os.getenv("FLAG", "PCTF{flag}")
 
 
-class PwnChallengeLauncher(Launcher):
+class StarknetPwnChallengeLauncher(Launcher):
     def __init__(
         self,
         project_location: str = "challenge/project",
         provider: TeamProvider = get_team_provider(),
     ):
         super().__init__(
-            'ethereum',
+            'starknet',
             project_location,
             provider,
             [
@@ -26,7 +24,8 @@ class PwnChallengeLauncher(Launcher):
         )
 
     def get_flag(self) -> int:
-        instance_body = requests.get(f"{ORCHESTRATOR_HOST}/instances/{self.get_instance_id()}").json()
+        instance_body = requests.get(
+            f"{ORCHESTRATOR_HOST}/instances/{self.get_instance_id()}").json()
         if not instance_body['ok']:
             print(instance_body['message'])
             return 1
@@ -45,13 +44,20 @@ class PwnChallengeLauncher(Launcher):
     def is_solved(self, user_data: UserData, addr: str) -> bool:
         web3 = get_privileged_web3(user_data, "main")
 
-        (result,) = abi.decode(
-            ["bool"],
-            web3.eth.call(
+        x = requests.post(web3.provider.endpoint_uri + "/rpc", json={
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "starknet_call",
+            "params": [
                 {
-                    "to": addr,
-                    "data": web3.keccak(text="isSolved()")[:4],
-                }
-            ),
-        )
-        return result
+                    "contract_address": addr,
+                    "calldata": [],
+                    "entry_point_selector": "0x1f8ddd388f265b0bcab25a3e457e789fe182bdf8ede59d9ef42b3158a533c8"
+                },
+                "latest"
+            ]
+        })
+
+        solved = True if json.loads(x.text)['result'][0] == "0x0" else False
+
+        return solved

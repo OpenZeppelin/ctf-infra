@@ -3,6 +3,7 @@ import logging
 import shlex
 import time
 from typing import Dict, List
+import requests
 
 import docker
 from ctf_server.databases.database import Database
@@ -12,6 +13,7 @@ from ctf_server.types import (
     InstanceInfo,
     UserData,
     format_anvil_args,
+    format_starknet_args
 )
 from docker.errors import APIError, NotFound
 from docker.models.containers import Container
@@ -36,27 +38,43 @@ class DockerBackend(Backend):
 
         anvil_containers: Dict[str, Container] = {}
         for anvil_id, anvil_args in request["anvil_instances"].items():
-            anvil_containers[anvil_id] = self.__client.containers.run(
-                name=f"{instance_id}-{anvil_id}",
-                image=anvil_args.get("image", DEFAULT_IMAGE),
-                network="paradigmctf",
-                entrypoint=["sh", "-c"],
-                command=[
-                    "while true; do anvil "
-                    + " ".join(
-                        [
-                            shlex.quote(str(v))
-                            for v in format_anvil_args(anvil_args, anvil_id)
-                        ]
-                    )
-                    + "; sleep 1; done;"
-                ],
-                restart_policy={"Name": "always"},
-                detach=True,
-                mounts=[
-                    Mount(target="/data", source=volume.id),
-                ],
-            )
+            if request["type"] == "starknet":
+                anvil_containers[anvil_id] = self.__client.containers.run(
+                    name=f"{instance_id}-{anvil_id}",
+                    image=anvil_args.get("image", "shardlabs/starknet-devnet-rs"),
+                    network="paradigmctf",
+                    entrypoint=["tini", "--", "starknet-devnet"] + [
+                                shlex.quote(str(v))
+                                for v in format_starknet_args(anvil_args, anvil_id)
+                            ],
+                    restart_policy={"Name": "always"},
+                    detach=True,
+                    mounts=[
+                        Mount(target="/data", source=volume.id),
+                    ],
+                )
+            else:
+                anvil_containers[anvil_id] = self.__client.containers.run(
+                    name=f"{instance_id}-{anvil_id}",
+                    image=anvil_args.get("image", DEFAULT_IMAGE),
+                    network="paradigmctf",
+                    entrypoint=["sh", "-c"],
+                    command=[
+                        "while true; do anvil "
+                        + " ".join(
+                            [
+                                shlex.quote(str(v))
+                                for v in format_anvil_args(anvil_args, anvil_id)
+                            ]
+                        )
+                        + "; sleep 1; done;"
+                    ],
+                    restart_policy={"Name": "always"},
+                    detach=True,
+                    mounts=[
+                        Mount(target="/data", source=volume.id),
+                    ],
+                )
 
         daemon_containers: Dict[str, Container] = {}
         for daemon_id, daemon_args in request.get("daemon_instances", {}).items():
@@ -83,14 +101,22 @@ class DockerBackend(Backend):
                 "port": 8545,
             }
 
-            self._prepare_node(
-                request["anvil_instances"][anvil_id],
-                Web3(
-                    Web3.HTTPProvider(
-                        f"http://{anvil_instances[anvil_id]['ip']}:{anvil_instances[anvil_id]['port']}"
-                    )
-                ),
-            )
+            url = f"http://{anvil_instances[anvil_id]['ip']}:{anvil_instances[anvil_id]['port']}"
+
+            if request["type"] == "starknet":
+                self._prepare_node_starknet(
+                    request["anvil_instances"][anvil_id],
+                    Web3(
+                        Web3.HTTPProvider(url)
+                    ),
+                )
+            else:
+                self._prepare_node(
+                    request["anvil_instances"][anvil_id],
+                    Web3(
+                        Web3.HTTPProvider(url)
+                    ),
+                )
 
         daemon_instances = {}
         for daemon_id, daemon_container in daemon_containers.items():
