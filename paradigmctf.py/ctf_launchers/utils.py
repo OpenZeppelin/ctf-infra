@@ -86,7 +86,7 @@ def deploy_cairo(
             deploy_script,
         ],
         env={
-            "RPC_URL": web3.provider.endpoint_uri,
+            "RPC_URL": web3.provider.endpoint_uri + "/rpc",
             "PRIVATE_KEY": credentials[0][1],
             "ACCOUNT_ADDRESS": credentials[0][0],
         }

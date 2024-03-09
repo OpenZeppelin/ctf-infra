@@ -4,6 +4,8 @@ import random
 import string
 import time
 from threading import Thread
+import requests
+import json
 
 from ctf_server.databases.database import Database
 from ctf_server.types import (
@@ -106,15 +108,3 @@ class Backend(abc.ABC):
                 break
             except:
                 time.sleep(0.1)
-
-        for i in range(args.get("accounts", DEFAULT_ACCOUNTS)):
-            # TODO: use starknet address instaed of normal evm one
-            starknet_setBalance(
-                web3,
-                self.__derive_account(
-                    args.get("derivation_path", DEFAULT_DERIVATION_PATH),
-                    args.get("mnemonic", DEFAULT_MNEMONIC),
-                    i,
-                ).address,
-                int(args.get("balance", DEFAULT_BALANCE) * 10**18),
-            )

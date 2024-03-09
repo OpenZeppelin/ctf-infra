@@ -6,10 +6,11 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List
 import requests
 import json
+import time
 
 import requests
 from ctf_launchers.team_provider import TeamProvider
-from ctf_launchers.utils import deploy, http_url_to_ws
+from ctf_launchers.utils import deploy, deploy_cairo, http_url_to_ws
 from ctf_server.types import (
     CreateInstanceRequest,
     DaemonInstanceArgs,
@@ -131,8 +132,12 @@ class Launcher(abc.ABC):
         print("deploying challenge...")
 
         if self.type == "starknet":
+            print('calling predeployed_accounts...')
             web3 = get_privileged_web3(user_data, "main")
+            
             credentials = self.get_credentials(web3.provider.endpoint_uri)
+
+            print('calling deploy script...')
 
             challenge_addr = self.deploy_cairo(user_data, credentials)
             priv_key = credentials[1][1]
@@ -148,7 +153,7 @@ class Launcher(abc.ABC):
 
         print()
         print(f"your private blockchain has been set up")
-        print(f"it will automatically terminate in {TIMEOUT} minutes")
+        print(f"it will automatically terminate in {TIMEOUT/60} minutes")
         print(f"---")
         print(f"rpc endpoints:")
         for id in user_data["anvil_instances"]:
@@ -163,7 +168,7 @@ class Launcher(abc.ABC):
 
     def kill_instance(self) -> int:
         resp = requests.delete(
-            f"{ORCHESTRATOR_HOST}/instances/${self.get_instance_id()}")
+            f"{ORCHESTRATOR_HOST}/instances/{self.get_instance_id()}")
         body = resp.json()
 
         print(body["message"])
@@ -180,22 +185,23 @@ class Launcher(abc.ABC):
     def deploy_cairo(self, user_data: UserData, credentials: list) -> str:
         web3 = get_privileged_web3(user_data, "main")
 
-        return self.deploy_cairo(web3, self.project_location, credentials, env=self.get_deployment_args(user_data))
+        return deploy_cairo(web3, self.project_location, credentials, env=self.get_deployment_args(user_data))
     
 
     def get_deployment_args(self, user_data: UserData) -> Dict[str, str]:
         return {}
 
-    def get_credentials(url: str) -> list:
-        x = json.loads(requests.get(url + '/predeployed_accounts').text)
+    def get_credentials(self, url: str) -> list:
+        x = requests.get(url + '/predeployed_accounts')
+        data = json.loads(x.text)
 
         system = []
         player = []
 
-        system.append(x[0]['address'])
-        system.append(x[0]['private_key'])
+        system.append(data[0]['address'])
+        system.append(data[0]['private_key'])
 
-        player.append(x[1]['address'])
-        player.append(x[1]['private_key'])
+        player.append(data[1]['address'])
+        player.append(data[1]['private_key'])
 
         return [system, player]

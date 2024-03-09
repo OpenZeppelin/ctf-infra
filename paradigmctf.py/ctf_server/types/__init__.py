@@ -68,7 +68,7 @@ def format_starknet_args(args: LaunchAnvilInstanceArgs, anvil_id: str, port: int
     cmd_args = []
     cmd_args += ["--host", "0.0.0.0"]
     cmd_args += ["--port", str(port)]
-    cmd_args += ["--accounts", "0"]
+    cmd_args += ["--accounts", "2"]
 
     return cmd_args
 
@@ -109,32 +109,6 @@ class UserData(TypedDict):
     anvil_instances: Dict[str, InstanceInfo]
     daemon_instances: Dict[str, InstanceInfo]
     metadata: Dict
-
-    # def get_privileged_account(self, offset: int) -> LocalAccount:
-    #     seed = seed_from_mnemonic(self.mnemonic, "")
-    #     private_key = key_from_seed(seed, f"m/44'/60'/0'/0/{offset}")
-
-    #     return Account.from_key(private_key)
-
-    # def get_player_account(self) -> LocalAccount:
-    #     return self.get_privileged_account(0)
-
-    # def get_system_account(self) -> LocalAccount:
-    #     return self.get_privileged_account(1)
-
-    # def get_additional_account(self, offset: int) -> LocalAccount:
-    #     return self.get_privileged_account(offset + 2)
-
-    # def get_privileged_web3(self, id: str) -> Web3:
-    #     return Web3(Web3.HTTPProvider(f"http://127.0.0.1:{self.instances[id].port}"))
-
-    # def get_unprivileged_web3(self, id: str) -> Web3:
-    #     return Web3(
-    #         Web3.HTTPProvider(
-    #             f"http://127.0.0.1:8545/{self.internal_id}/{id}",
-    #             request_kwargs={"timeout": 60},
-    #         )
-    #     )
 
 
 def get_account(mnemonic: str, offset: int) -> LocalAccount:

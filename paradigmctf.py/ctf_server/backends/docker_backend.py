@@ -3,6 +3,7 @@ import logging
 import shlex
 import time
 from typing import Dict, List
+import requests
 
 import docker
 from ctf_server.databases.database import Database
@@ -103,13 +104,12 @@ class DockerBackend(Backend):
             url = f"http://{anvil_instances[anvil_id]['ip']}:{anvil_instances[anvil_id]['port']}"
 
             if request["type"] == "starknet":
-                # self._prepare_node_starknet(
-                #     request["anvil_instances"][anvil_id],
-                #     Web3(
-                #         Web3.HTTPProvider(url)
-                #     ),
-                # )
-                pass
+                self._prepare_node_starknet(
+                    request["anvil_instances"][anvil_id],
+                    Web3(
+                        Web3.HTTPProvider(url)
+                    ),
+                )
             else:
                 self._prepare_node(
                     request["anvil_instances"][anvil_id],
