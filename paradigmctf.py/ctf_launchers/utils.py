@@ -104,9 +104,9 @@ def deploy_cairo(
         print(stderr)
         raise Exception("script failed to run")
 
-    output = stdout.split('address: ')
+    output = stdout.split('address: ')[1].replace("\\n", "")
 
-    return output[1]
+    return output[:65]
 
 
 def anvil_setCodeFromFile(
