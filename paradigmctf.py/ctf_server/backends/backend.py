@@ -108,3 +108,8 @@ class Backend(abc.ABC):
                 break
             except:
                 time.sleep(0.1)
+
+    def _prepare_node_nitro(self, args: LaunchAnvilInstanceArgs, web3: Web3):
+        while not web3.is_connected():
+            time.sleep(0.1)
+            continue

@@ -126,6 +126,13 @@ class DockerBackend(Backend):
                         Web3.HTTPProvider(url)
                     ),
                 )
+            elif request["type"] == "nitro":
+                self._prepare_node_nitro(
+                    request["anvil_instances"][anvil_id],
+                    Web3(
+                        Web3.HTTPProvider(url)
+                    ),
+                )
             else:
                 self._prepare_node(
                     request["anvil_instances"][anvil_id],
