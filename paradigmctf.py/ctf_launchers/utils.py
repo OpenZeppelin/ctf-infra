@@ -1,10 +1,9 @@
 import json
 import os
-import shutil
+import re
 import subprocess
 from typing import Dict
 
-from eth_account.account import LocalAccount
 from web3 import Web3
 
 from foundry.anvil import anvil_autoImpersonateAccount, anvil_setCode
@@ -108,8 +107,47 @@ def deploy_cairo(
     return output[:65]
 
 
-def deploy_stylus():
-    pass
+def deploy_nitro(
+    web3: Web3,
+    project_location: str,
+    credentials: list,
+    deploy_script: str = "deploy.py",
+    env: Dict = {},
+) -> str:
+    rfd, wfd = os.pipe2(os.O_NONBLOCK)
+
+    proc = subprocess.Popen(
+        args=[
+            "/opt/rust/cargo/bin/cargo",
+            "stylus",
+            "deploy",
+            "-e",
+            web3.provider.endpoint_uri,
+            "--private-key",
+            "0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"
+        ],
+        pass_fds=[wfd],
+        cwd=project_location,
+        text=True,
+        encoding="utf8",
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stdout, stderr = proc.communicate()
+
+    if proc.returncode != 0:
+        print(stdout)
+        print(stderr)
+        raise Exception("script failed to run")
+
+    address = stdout.split('Activating program at address ')[1].replace("\\n", "")
+
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+
+    output = ansi_escape.sub('', address)[:42]
+
+    return output
 
 
 def anvil_setCodeFromFile(

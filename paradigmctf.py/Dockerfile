@@ -30,6 +30,20 @@ RUN true && \
     huffup && \
     true
 
+# Install Stylus
+
+env RUSTUP_HOME=/opt/rust/rustup CARGO_HOME=/opt/rust/cargo
+env PATH=${PATH}:/opt/rust/cargo/bin
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+RUN rustup toolchain install nightly
+RUN rustup component add rust-src --toolchain nightly
+RUN rustup target add wasm32-unknown-unknown
+RUN RUSTFLAGS="-C link-args=-rdynamic" cargo install --force cargo-stylus
+RUN cargo install wasm-opt --locked
+
+RUN chmod -R 777 /opt/rust
+
 # (Optimization) Install requirements
 COPY requirements.txt /tmp/requirements.txt
 
