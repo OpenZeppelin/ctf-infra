@@ -8,7 +8,7 @@ import json
 
 import requests
 from ctf_launchers.team_provider import TeamProvider
-from ctf_launchers.utils import deploy, deploy_cairo, http_url_to_ws
+from ctf_launchers.utils import deploy, deploy_cairo, deploy_nitro, http_url_to_ws
 from ctf_server.types import (
     CreateInstanceRequest,
     DaemonInstanceArgs,
@@ -124,11 +124,14 @@ class Launcher(abc.ABC):
 
         if self.type == "starknet":
             web3 = get_privileged_web3(user_data, "main")
-            
+
             credentials = self.get_credentials(web3.provider.endpoint_uri)
 
             challenge_addr = self.deploy_cairo(user_data, credentials)
             priv_key = credentials[1][1]
+        elif self.type == "nitro":
+            challenge_addr = self.deploy_nitro(user_data, self.mnemonic)
+            priv_key = get_player_account(self.mnemonic).key.hex()
         else:
             challenge_addr = self.deploy(user_data, self.mnemonic)
             priv_key = get_player_account(self.mnemonic).key.hex()
@@ -141,7 +144,8 @@ class Launcher(abc.ABC):
 
         print()
         print(f"your private blockchain has been set up")
-        print(f"it will automatically terminate in {round(TIMEOUT/60)} minutes")
+        print(
+            f"it will automatically terminate in {round(TIMEOUT/60)} minutes")
         print(f"---")
         print(f"rpc endpoints:")
         for id in user_data["anvil_instances"]:
@@ -171,12 +175,19 @@ class Launcher(abc.ABC):
             web3, self.project_location, mnemonic, env=self.get_deployment_args(
                 user_data)
         )
-        
+
     def deploy_cairo(self, user_data: UserData, credentials: list) -> str:
         web3 = get_privileged_web3(user_data, "main")
 
         return deploy_cairo(web3, self.project_location, credentials, env=self.get_deployment_args(user_data))
-    
+
+    def deploy_nitro(self, user_data: UserData, mnemonic: str) -> str:
+        web3 = get_privileged_web3(user_data, "main")
+
+        return deploy_nitro(
+            web3, self.project_location, mnemonic, env=self.get_deployment_args(
+                user_data)
+        )
 
     def get_deployment_args(self, user_data: UserData) -> Dict[str, str]:
         return {}

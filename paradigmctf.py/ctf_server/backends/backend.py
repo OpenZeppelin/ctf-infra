@@ -113,3 +113,25 @@ class Backend(abc.ABC):
         while not web3.is_connected():
             time.sleep(0.1)
             continue
+
+        pk = "0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"
+        acc = web3.eth.account.from_key(pk)
+
+        for i in range(args.get("accounts", DEFAULT_ACCOUNTS)):
+            transaction = {
+                'from': acc.address,
+                'to': self.__derive_account(
+                    args.get("derivation_path", DEFAULT_DERIVATION_PATH),
+                    args.get("mnemonic", DEFAULT_MNEMONIC),
+                    i,
+                ).address,
+                'value': 250 * 10 ** 18,
+                'nonce': web3.eth.get_transaction_count(acc.address),
+                'gas': 1000000,
+                'chainId': web3.eth.chain_id,
+                'gasPrice': web3.eth.gas_price
+            }
+
+            signed = web3.eth.account.sign_transaction(transaction, pk)
+
+            web3.eth.send_raw_transaction(signed.rawTransaction)

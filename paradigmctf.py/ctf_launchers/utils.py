@@ -10,7 +10,6 @@ from web3 import Web3
 from foundry.anvil import anvil_autoImpersonateAccount, anvil_setCode
 
 
-
 def deploy(
     web3: Web3,
     project_location: str,
@@ -109,6 +108,10 @@ def deploy_cairo(
     return output[:65]
 
 
+def deploy_stylus():
+    pass
+
+
 def anvil_setCodeFromFile(
     web3: Web3,
     addr: str,
@@ -123,10 +126,11 @@ def anvil_setCodeFromFile(
 
     anvil_setCode(web3, addr, bytecode)
 
+
 def http_url_to_ws(url: str) -> str:
     if url.startswith("http://"):
-        return "ws://" + url[len("http://") :]
+        return "ws://" + url[len("http://"):]
     elif url.startswith("https://"):
-        return "wss://" + url[len("https://") :]
+        return "wss://" + url[len("https://"):]
 
     return url
