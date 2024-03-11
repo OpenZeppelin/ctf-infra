@@ -43,5 +43,15 @@ class NitroPwnChallengeLauncher(Launcher):
         return 0
 
     def is_solved(self, user_data: UserData, addr: str) -> bool:
-        # TODO
-        return False
+        web3 = get_privileged_web3(user_data, "main")
+
+        (result,) = abi.decode(
+            ["bool"],
+            web3.eth.call(
+                {
+                    "to": addr,
+                    "data": web3.keccak(text="isSolved()")[:4],
+                }
+            ),
+        )
+        return result

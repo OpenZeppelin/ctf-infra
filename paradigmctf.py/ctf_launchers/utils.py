@@ -111,8 +111,9 @@ def deploy_no_impersonate(
     web3: Web3,
     project_location: str,
     mnemonic: str,
+    token: str,
     deploy_script: str = "script/Deploy.s.sol:Deploy",
-    env: Dict = {},
+    env: Dict = {}
 ) -> str:
     rfd, wfd = os.pipe2(os.O_NONBLOCK)
 
@@ -158,7 +159,55 @@ def deploy_no_impersonate(
     os.close(rfd)
     os.close(wfd)
 
+    # cast_initialize(web3, project_location, token, result)
+
     return result
+
+
+def cast_initialize(
+    web3: Web3,
+    project_location: str,
+    token: str,
+    entrypoint: str
+) -> str:
+    rfd, wfd = os.pipe2(os.O_NONBLOCK)
+
+    proc = subprocess.Popen(
+        args=[
+            "/opt/foundry/bin/cast",
+            "send",
+            token,
+            '"initialize(address)"',
+            entrypoint,
+            "--rpc-url",
+            web3.provider.endpoint_uri,
+            "--private-key",
+            "0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"
+        ],
+        pass_fds=[wfd],
+        cwd=project_location,
+        text=True,
+        encoding="utf8",
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stdout, stderr = proc.communicate()
+
+    if proc.returncode != 0:
+        print(stdout)
+        print(stderr)
+        raise Exception("cast failed to run")
+
+    result = os.read(rfd, 256).decode("utf8")
+
+    os.close(rfd)
+    os.close(wfd)
+
+    return result
+
+
+
 
 
 def deploy_nitro(
@@ -212,6 +261,7 @@ def deploy_nitro(
         web3,
         project_location,
         "",
+        token,
         env=env,
     )
 
