@@ -107,11 +107,64 @@ def deploy_cairo(
     return output[:65]
 
 
+def deploy_no_impersonate(
+    web3: Web3,
+    project_location: str,
+    mnemonic: str,
+    deploy_script: str = "script/Deploy.s.sol:Deploy",
+    env: Dict = {},
+) -> str:
+    rfd, wfd = os.pipe2(os.O_NONBLOCK)
+
+    proc = subprocess.Popen(
+        args=[
+            "/opt/foundry/bin/forge",
+            "script",
+            "--rpc-url",
+            web3.provider.endpoint_uri,
+            "--out",
+            "/artifacts/out",
+            "--cache-path",
+            "/artifacts/cache",
+            "--broadcast",
+            "--unlocked",
+            "--sender",
+            "0x0000000000000000000000000000000000000000",
+            deploy_script,
+        ],
+        env={
+            "PATH": "/opt/huff/bin:/opt/foundry/bin:/usr/bin:" + os.getenv("PATH", "/fake"),
+            "MNEMONIC": mnemonic,
+            "OUTPUT_FILE": f"/proc/self/fd/{wfd}",
+        }
+        | env,
+        pass_fds=[wfd],
+        cwd=project_location,
+        text=True,
+        encoding="utf8",
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stdout, stderr = proc.communicate()
+
+    if proc.returncode != 0:
+        print(stdout)
+        print(stderr)
+        raise Exception("forge failed to run")
+
+    result = os.read(rfd, 256).decode("utf8")
+
+    os.close(rfd)
+    os.close(wfd)
+
+    return result
+
+
 def deploy_nitro(
     web3: Web3,
     project_location: str,
-    credentials: list,
-    deploy_script: str = "deploy.py",
+    mnemonic: list,
     env: Dict = {},
 ) -> str:
     rfd, wfd = os.pipe2(os.O_NONBLOCK)
@@ -141,11 +194,26 @@ def deploy_nitro(
         print(stderr)
         raise Exception("script failed to run")
 
-    address = stdout.split('Activating program at address ')[1].replace("\\n", "")
+    address = stdout.split('Activating program at address ')[
+        1].replace("\\n", "")
 
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
-    output = ansi_escape.sub('', address)[:42]
+    token = ansi_escape.sub('', address)[:42]
+
+    env = {
+        "PATH": "/opt/huff/bin:/opt/foundry/bin:/usr/bin:" + os.getenv("PATH", "/fake"),
+        "MNEMONIC": mnemonic,
+        "OUTPUT_FILE": f"/proc/self/fd/{wfd}",
+        "TOKEN": token
+    }
+
+    output = deploy_no_impersonate(
+        web3,
+        project_location,
+        "",
+        env=env,
+    )
 
     return output
 
