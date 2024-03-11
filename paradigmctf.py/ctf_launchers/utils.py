@@ -115,31 +115,22 @@ def deploy_no_impersonate(
     deploy_script: str = "script/Deploy.s.sol:Deploy",
     env: Dict = {}
 ) -> str:
-    rfd, wfd = os.pipe2(os.O_NONBLOCK)
-
     proc = subprocess.Popen(
         args=[
             "/opt/foundry/bin/forge",
-            "script",
+            "create",
+            "src/Challenge.sol:Challenge",
+            "--constructor-args",
+            token,
             "--rpc-url",
             web3.provider.endpoint_uri,
-            "--out",
-            "/artifacts/out",
-            "--cache-path",
-            "/artifacts/cache",
-            "--broadcast",
-            "--unlocked",
-            "--sender",
-            "0x0000000000000000000000000000000000000000",
-            deploy_script,
+            "--private-key",
+            "0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"
         ],
         env={
             "PATH": "/opt/huff/bin:/opt/foundry/bin:/usr/bin:" + os.getenv("PATH", "/fake"),
-            "MNEMONIC": mnemonic,
-            "OUTPUT_FILE": f"/proc/self/fd/{wfd}",
         }
         | env,
-        pass_fds=[wfd],
         cwd=project_location,
         text=True,
         encoding="utf8",
@@ -154,14 +145,12 @@ def deploy_no_impersonate(
         print(stderr)
         raise Exception("forge failed to run")
 
-    result = os.read(rfd, 256).decode("utf8")
+    address = stdout.split('Deployed to: ')[
+        1].replace("\\n", "")[:42]
 
-    os.close(rfd)
-    os.close(wfd)
+    cast_initialize(web3, project_location, token, address)
 
-    # cast_initialize(web3, project_location, token, result)
-
-    return result
+    return address
 
 
 def cast_initialize(
@@ -170,21 +159,17 @@ def cast_initialize(
     token: str,
     entrypoint: str
 ) -> str:
-    rfd, wfd = os.pipe2(os.O_NONBLOCK)
-
     proc = subprocess.Popen(
         args=[
             "/opt/foundry/bin/cast",
             "send",
             token,
-            '"initialize(address)"',
-            entrypoint,
+            "0xc4d66de8000000000000000000000000"  + entrypoint[2:],
             "--rpc-url",
             web3.provider.endpoint_uri,
             "--private-key",
             "0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"
         ],
-        pass_fds=[wfd],
         cwd=project_location,
         text=True,
         encoding="utf8",
@@ -192,22 +177,13 @@ def cast_initialize(
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
+
     stdout, stderr = proc.communicate()
 
     if proc.returncode != 0:
         print(stdout)
         print(stderr)
         raise Exception("cast failed to run")
-
-    result = os.read(rfd, 256).decode("utf8")
-
-    os.close(rfd)
-    os.close(wfd)
-
-    return result
-
-
-
 
 
 def deploy_nitro(
