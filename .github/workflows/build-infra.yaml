@@ -32,7 +32,9 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./paradigmctf.py
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           tags: |
             ghcr.io/${{ steps.repo.outputs.lowercase }}:latest
