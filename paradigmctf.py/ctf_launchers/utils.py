@@ -1,14 +1,12 @@
 import json
 import os
-import shutil
+import re
 import subprocess
 from typing import Dict
 
-from eth_account.account import LocalAccount
 from web3 import Web3
 
 from foundry.anvil import anvil_autoImpersonateAccount, anvil_setCode
-
 
 
 def deploy(
@@ -109,6 +107,143 @@ def deploy_cairo(
     return output[:65]
 
 
+def deploy_no_impersonate(
+    web3: Web3,
+    project_location: str,
+    mnemonic: str,
+    token: str,
+    deploy_script: str = "script/Deploy.s.sol:Deploy",
+    env: Dict = {}
+) -> str:
+    proc = subprocess.Popen(
+        args=[
+            "/opt/foundry/bin/forge",
+            "create",
+            "src/Challenge.sol:Challenge",
+            "--constructor-args",
+            token,
+            "--rpc-url",
+            web3.provider.endpoint_uri,
+            "--private-key",
+            "0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"
+        ],
+        env={
+            "PATH": "/opt/huff/bin:/opt/foundry/bin:/usr/bin:" + os.getenv("PATH", "/fake"),
+        }
+        | env,
+        cwd=project_location,
+        text=True,
+        encoding="utf8",
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stdout, stderr = proc.communicate()
+
+    if proc.returncode != 0:
+        print(stdout)
+        print(stderr)
+        raise Exception("forge failed to run")
+
+    address = stdout.split('Deployed to: ')[
+        1].replace("\\n", "")[:42]
+
+    cast_initialize(web3, project_location, token, address)
+
+    return address
+
+
+def cast_initialize(
+    web3: Web3,
+    project_location: str,
+    token: str,
+    entrypoint: str
+) -> str:
+    proc = subprocess.Popen(
+        args=[
+            "/opt/foundry/bin/cast",
+            "send",
+            token,
+            "0xc4d66de8000000000000000000000000"  + entrypoint[2:],
+            "--rpc-url",
+            web3.provider.endpoint_uri,
+            "--private-key",
+            "0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"
+        ],
+        cwd=project_location,
+        text=True,
+        encoding="utf8",
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    stdout, stderr = proc.communicate()
+
+    if proc.returncode != 0:
+        print(stdout)
+        print(stderr)
+        raise Exception("cast failed to run")
+
+
+def deploy_nitro(
+    web3: Web3,
+    project_location: str,
+    mnemonic: list,
+    env: Dict = {},
+) -> str:
+    rfd, wfd = os.pipe2(os.O_NONBLOCK)
+
+    proc = subprocess.Popen(
+        args=[
+            "/opt/rust/cargo/bin/cargo",
+            "stylus",
+            "deploy",
+            "-e",
+            web3.provider.endpoint_uri,
+            "--private-key",
+            "0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"
+        ],
+        pass_fds=[wfd],
+        cwd=project_location,
+        text=True,
+        encoding="utf8",
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stdout, stderr = proc.communicate()
+
+    if proc.returncode != 0:
+        print(stdout)
+        print(stderr)
+        raise Exception("script failed to run")
+
+    address = stdout.split('Activating program at address ')[
+        1].replace("\\n", "")
+
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+
+    token = ansi_escape.sub('', address)[:42]
+
+    env = {
+        "PATH": "/opt/huff/bin:/opt/foundry/bin:/usr/bin:" + os.getenv("PATH", "/fake"),
+        "MNEMONIC": mnemonic,
+        "OUTPUT_FILE": f"/proc/self/fd/{wfd}",
+        "TOKEN": token
+    }
+
+    output = deploy_no_impersonate(
+        web3,
+        project_location,
+        "",
+        token,
+        env=env,
+    )
+
+    return output
+
+
 def anvil_setCodeFromFile(
     web3: Web3,
     addr: str,
@@ -123,10 +258,11 @@ def anvil_setCodeFromFile(
 
     anvil_setCode(web3, addr, bytecode)
 
+
 def http_url_to_ws(url: str) -> str:
     if url.startswith("http://"):
-        return "ws://" + url[len("http://") :]
+        return "ws://" + url[len("http://"):]
     elif url.startswith("https://"):
-        return "wss://" + url[len("https://") :]
+        return "wss://" + url[len("https://"):]
 
     return url

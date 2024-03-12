@@ -13,7 +13,8 @@ from ctf_server.types import (
     InstanceInfo,
     UserData,
     format_anvil_args,
-    format_starknet_args
+    format_starknet_args,
+    format_nitro_args
 )
 from docker.errors import APIError, NotFound
 from docker.models.containers import Container
@@ -41,12 +42,26 @@ class DockerBackend(Backend):
             if request["type"] == "starknet":
                 anvil_containers[anvil_id] = self.__client.containers.run(
                     name=f"{instance_id}-{anvil_id}",
-                    image=anvil_args.get("image", "shardlabs/starknet-devnet-rs"),
+                    image=anvil_args.get(
+                        "image", "shardlabs/starknet-devnet-rs"),
                     network="paradigmctf",
                     entrypoint=["tini", "--", "starknet-devnet"] + [
-                                shlex.quote(str(v))
-                                for v in format_starknet_args(anvil_args, anvil_id)
-                            ],
+                        shlex.quote(str(v))
+                        for v in format_starknet_args(anvil_args, anvil_id)
+                    ],
+                    restart_policy={"Name": "always"},
+                    detach=True,
+                    mounts=[
+                        Mount(target="/data", source=volume.id),
+                    ],
+                )
+            elif request["type"] == "nitro":
+                anvil_containers[anvil_id] = self.__client.containers.run(
+                    name=f"{instance_id}-{anvil_id}",
+                    image=anvil_args.get(
+                        "image", "offchainlabs/stylus-node:v0.1.0-f47fec1-dev"),
+                    network="paradigmctf",
+                    command=format_nitro_args(anvil_args, anvil_id),
                     restart_policy={"Name": "always"},
                     detach=True,
                     mounts=[
@@ -91,7 +106,8 @@ class DockerBackend(Backend):
 
         anvil_instances: Dict[str, InstanceInfo] = {}
         for anvil_id, anvil_container in anvil_containers.items():
-            container: Container = self.__client.containers.get(anvil_container.id)
+            container: Container = self.__client.containers.get(
+                anvil_container.id)
 
             anvil_instances[anvil_id] = {
                 "id": anvil_id,
@@ -105,6 +121,13 @@ class DockerBackend(Backend):
 
             if request["type"] == "starknet":
                 self._prepare_node_starknet(
+                    request["anvil_instances"][anvil_id],
+                    Web3(
+                        Web3.HTTPProvider(url)
+                    ),
+                )
+            elif request["type"] == "nitro":
+                self._prepare_node_nitro(
                     request["anvil_instances"][anvil_id],
                     Web3(
                         Web3.HTTPProvider(url)
@@ -171,11 +194,13 @@ class DockerBackend(Backend):
     def __try_delete_container(self, container_name: str):
         try:
             try:
-                container: Container = self.__client.containers.get(container_name)
+                container: Container = self.__client.containers.get(
+                    container_name)
             except NotFound:
                 return
 
-            logging.info("deleting container %s (%s)", container.id, container.name)
+            logging.info("deleting container %s (%s)",
+                         container.id, container.name)
 
             try:
                 container.kill()

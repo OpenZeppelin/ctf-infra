@@ -64,11 +64,31 @@ def format_anvil_args(args: LaunchAnvilInstanceArgs, anvil_id: str, port: int = 
 
     return cmd_args
 
+
 def format_starknet_args(args: LaunchAnvilInstanceArgs, anvil_id: str, port: int = 8545) -> List[str]:
     cmd_args = []
     cmd_args += ["--host", "0.0.0.0"]
     cmd_args += ["--port", str(port)]
     cmd_args += ["--accounts", "2"]
+
+    return cmd_args
+
+
+def format_nitro_args(args: LaunchAnvilInstanceArgs, anvil_id: str, port: int = 8545) -> List[str]:
+    cmd_args = []
+    cmd_args += ["--node.dangerous.no-l1-listener"]
+    cmd_args += ["--node.sequencer.dangerous.no-coordinator"]
+    cmd_args += ["--node.sequencer.enable"]
+    cmd_args += ["--node.staker.enable=false"]
+    cmd_args += ["--init.dev-init"]
+    cmd_args += ["--init.empty=false"]
+    cmd_args += ["--chain.id=473474"]
+    cmd_args += ["--chain.dev-wallet.private-key=b6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"]
+    cmd_args += ["--http.addr=0.0.0.0"]
+    cmd_args += ["--http.port", str(port)]
+    cmd_args += ["--http.vhosts='*'"]
+    cmd_args += ["--http.corsdomain='*'"]
+    cmd_args += ["--chain.info-json", '[{"chain-name": "ctf","chain-config": {"chainId": 473474,"homesteadBlock": 0,"daoForkBlock": null,"daoForkSupport": true,"eip150Block": 0,"eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000","eip155Block": 0,"eip158Block": 0,"byzantiumBlock": 0,"constantinopleBlock": 0,"petersburgBlock": 0,"istanbulBlock": 0,"muirGlacierBlock": 0,"berlinBlock": 0,"londonBlock": 0,"clique": {"period": 0,"epoch": 0},"arbitrum": {"EnableArbOS": true,"AllowDebugPrecompiles": true,"DataAvailabilityCommittee": false,"InitialArbOSVersion": 11,"InitialChainOwner": "0x0000000000000000000000000000000000000000","GenesisBlockNum": 0}}}]']
 
     return cmd_args
 
@@ -133,7 +153,8 @@ def get_additional_account(mnemonic: str, offset: int) -> LocalAccount:
 def get_privileged_web3(user_data: UserData, anvil_id: str) -> Web3:
     anvil_instance = user_data["anvil_instances"][anvil_id]
     return Web3(
-        Web3.HTTPProvider(f"http://{anvil_instance['ip']}:{anvil_instance['port']}")
+        Web3.HTTPProvider(
+            f"http://{anvil_instance['ip']}:{anvil_instance['port']}")
     )
 
 
