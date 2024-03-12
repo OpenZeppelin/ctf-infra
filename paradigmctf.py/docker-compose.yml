@@ -14,7 +14,7 @@ services:
       - database:/data
   ctf-server-orchestrator:
     container_name: orchestrator
-    image: us-docker.pkg.dev/idyllic-adviser-409615/openzeppelin/ctf-2024-server:latest
+    image: ghcr.io/openzeppelin/ctf-infra:latest
     build: .
     user: root
     command: uvicorn ctf_server:orchestrator --host 0.0.0.0 --port 7283
@@ -32,7 +32,7 @@ services:
       - database
   ctf-server-anvil-proxy:
     container_name: anvil-proxy
-    image: us-docker.pkg.dev/idyllic-adviser-409615/openzeppelin/ctf-2024-server:latest
+    image: ghcr.io/openzeppelin/ctf-infra:latest
     build: .
     command: uvicorn ctf_server:anvil_proxy --host 0.0.0.0 --port 8545
     ports:
