@@ -41,7 +41,7 @@ RUN rustup component add rust-src --toolchain nightly
 RUN rustup target add wasm32-unknown-unknown
 RUN RUSTFLAGS="-C link-args=-rdynamic" cargo install --force cargo-stylus
 
-RUN chmod -R 777 /opt/rust
+RUN chmod -R 777 /opt/rust/cargo/registry
 
 # (Optimization) Install requirements
 COPY requirements.txt /tmp/requirements.txt
