@@ -88,7 +88,7 @@ spec:
     spec:
       serviceAccountName: ctf-server
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
       - name: orchestrator
         image: ghcr.io/openzeppelin/ctf-infra:latest
@@ -139,7 +139,7 @@ spec:
     spec:
       serviceAccountName: ctf-server
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
       - name: anvil-proxy
         image: ghcr.io/openzeppelin/ctf-infra:latest
