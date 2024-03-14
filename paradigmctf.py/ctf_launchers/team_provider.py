@@ -85,4 +85,4 @@ def get_team_provider() -> TeamProvider:
     elif env == "dev":
         return StaticTeamProvider(team_id="dev", ticket="dev2023")
     else:
-        return TicketTeamProvider(challenge_id=os.getenv("CHALLENGE", "challenge"))
+        return TicketTeamProvider(challenge_id=os.getenv("CHALLENGE_ID", "challenge"))

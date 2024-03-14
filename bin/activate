@@ -31,7 +31,7 @@ function start-challenge {
     PROD_HOST="challenges.openzeppelin.com"
     SECRET="secret"
 
-    ENV="${ENV:-local}"
+    ENV="${ENV:-prod}"
 
     _kctf_set_active_challenge
     
@@ -66,6 +66,7 @@ function start-challenge {
     CONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_CHALLENGE_ID" "$CHALLENGE_NAME")
     CONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_FLAG" "$FLAG")
     CONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_ETH_RPC_URL" "https://mainnet.infura.io/v3/a5d448ae5f454f1488d667b98b9963ec")
+    CONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_CHALLENGE" "$CHALLENGE_NAME")
 
     if [ "$ENV" = "local" ]; then
         NETWORK_SPEC=$(echo '{}' | jq '.public = false')
