@@ -102,7 +102,7 @@ spec:
           value: redis://redis:6379/0
         ports:
         - containerPort: 7283
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         securityContext:
           allowPrivilegeEscalation: false
         resources:
@@ -151,7 +151,7 @@ spec:
           value: redis://redis:6379/0
         ports:
         - containerPort: 8545
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         securityContext:
           allowPrivilegeEscalation: false
         resources:
