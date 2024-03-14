@@ -82,8 +82,8 @@ class Launcher(abc.ABC):
             kwargs["balance"] = 1000
         if not "accounts" in kwargs:
             kwargs["accounts"] = 2
-        if not "fork_url" in kwargs:
-            kwargs["fork_url"] = ETH_RPC_URL
+        # if not "fork_url" in kwargs:
+        #     kwargs["fork_url"] = ETH_RPC_URL
         if not "mnemonic" in kwargs:
             kwargs["mnemonic"] = self.mnemonic
         return LaunchAnvilInstanceArgs(

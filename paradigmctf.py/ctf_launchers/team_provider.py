@@ -1,5 +1,6 @@
 import abc
 import os
+import base64
 from dataclasses import dataclass
 from typing import Optional
 
@@ -34,18 +35,23 @@ class TicketTeamProvider(TeamProvider):
         return ticket.team_id
 
     def __check_ticket(self, ticket: str) -> Ticket:
-        ticket_info = requests.post(
-            "https://ctf.openzeppelin.com/api/internal/check-ticket",
-            json={
-                "ticket": ticket,
-            },
+        std_base64chars = "0123456789"
+        custom = "0629851743"
+
+        x = str(ticket).translate(str(ticket).maketrans(custom, std_base64chars))
+        decoded = base64.b64decode(x).decode().split(',')
+        chall = decoded[0]
+        id = decoded[1]
+
+        ticket_info = requests.get(
+            "https://ctf.openzeppelin.com/api/v1/challenges/check-ticket/" + id,
         ).json()
-        if not ticket_info["ok"]:
+        if not ticket_info["data"] or not ticket_info["success"]:
             return None
 
         return TicketTeamProvider.Ticket(
-            challenge_id=ticket_info["ticket"]["challengeId"],
-            team_id=ticket_info["ticket"]["teamId"],
+            challenge_id=chall,
+            team_id=id,
         )
 
 
@@ -79,4 +85,4 @@ def get_team_provider() -> TeamProvider:
     elif env == "dev":
         return StaticTeamProvider(team_id="dev", ticket="dev2023")
     else:
-        return TicketTeamProvider(challenge_id=os.getenv("CHALLENGE_ID"))
+        return TicketTeamProvider(challenge_id=os.getenv("CHALLENGE", "challenge"))
