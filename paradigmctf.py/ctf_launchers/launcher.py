@@ -24,7 +24,7 @@ ORCHESTRATOR_HOST = os.getenv("ORCHESTRATOR_HOST", "http://orchestrator:7283")
 PUBLIC_HOST = os.getenv("PUBLIC_HOST", "http://127.0.0.1:8545")
 
 ETH_RPC_URL = os.getenv("ETH_RPC_URL")
-TIMEOUT = int(os.getenv("TIMEOUT", "1440"))
+TIMEOUT = int(os.getenv("TIMEOUT", "720"))
 
 
 @dataclass
