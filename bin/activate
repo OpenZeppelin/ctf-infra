@@ -28,7 +28,7 @@ function bundle-challenge {
 
 function start-challenge {
     DEV_HOST="challenges-dev.openzeppelin.com"
-    PROD_HOST="challenges.openzeppelin.com"
+    PROD_HOST="insert"
     SECRET="secret"
 
     ENV="${ENV:-prod}"
@@ -80,7 +80,7 @@ function start-challenge {
         NETWORK_SPEC=$(echo '{}' | jq '.public = true')
         # NETWORK_SPEC=$(append_network_port "$NETWORK_SPEC" "TCP" "1337" "$PROD_HOST")
         # NETWORK_SPEC=$(append_network_port "$NETWORK_SPEC" "TCP" "8545" "$PROD_HOST")
-        # CONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_PUBLIC_HOST" "http://${CHALLENGE_NAME}.${PROD_HOST}:8545")
+        CONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_PUBLIC_HOST" "http://${CHALLENGE_NAME}.${PROD_HOST}:8545")
         # CONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_SECRET" "$SECRET")
         CONTAINER_SPEC="$(echo "$CONTAINER_SPEC" | jq -c ".resources.limits.memory = \"8G\"")"
         CONTAINER_SPEC="$(echo "$CONTAINER_SPEC" | jq -c ".resources.limits.cpu = \"2\"")"
