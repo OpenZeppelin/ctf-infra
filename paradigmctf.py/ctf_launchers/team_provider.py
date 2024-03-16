@@ -45,10 +45,7 @@ class TicketTeamProvider(TeamProvider):
         std_base64chars = "0123456789"
         custom = "0629851743"
 
-        key=str.encode(os.getenv("SECRET", "secret"))
-        decrypted = decrypt(ticket, key).decode()
-
-        x = decrypted.translate(str(ticket).maketrans(custom, std_base64chars))
+        x = str(ticket).translate(str(ticket).maketrans(custom, std_base64chars))
         decoded = base64.b64decode(x).decode().split(',')
         chall = decoded[0]
         id = decoded[1]
