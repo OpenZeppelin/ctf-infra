@@ -5,6 +5,13 @@ from dataclasses import dataclass
 from typing import Optional
 
 import requests
+from cryptography.fernet import Fernet
+
+def encrypt(message: bytes, key: bytes) -> bytes:
+    return Fernet(key).encrypt(message)
+
+def decrypt(token: bytes, key: bytes) -> bytes:
+    return Fernet(key).decrypt(token)
 
 
 class TeamProvider(abc.ABC):
@@ -25,11 +32,9 @@ class TicketTeamProvider(TeamProvider):
     def get_team(self):
         ticket = self.__check_ticket(input("ticket? "))
         if not ticket:
-            print("invalid ticket!")
             return None
 
         if ticket.challenge_id != self.__challenge_id:
-            print("invalid ticket!")
             return None
 
         return ticket.team_id
@@ -38,7 +43,10 @@ class TicketTeamProvider(TeamProvider):
         std_base64chars = "0123456789"
         custom = "0629851743"
 
-        x = str(ticket).translate(str(ticket).maketrans(custom, std_base64chars))
+        key = b'G69S2TR9MBg3NI9FTGzAfJh3xn549mswWtL6fB66m2Q='
+        decrypted = decrypt(ticket, key).decode()
+
+        x = decrypted.translate(str(ticket).maketrans(custom, std_base64chars))
         decoded = base64.b64decode(x).decode().split(',')
         chall = decoded[0]
         id = decoded[1]
