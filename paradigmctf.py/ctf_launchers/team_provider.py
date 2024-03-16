@@ -32,9 +32,11 @@ class TicketTeamProvider(TeamProvider):
     def get_team(self):
         ticket = self.__check_ticket(input("ticket? "))
         if not ticket:
+            print("invalid ticket!")
             return None
 
         if ticket.challenge_id != self.__challenge_id:
+            print("invalid ticket!")
             return None
 
         return ticket.team_id
