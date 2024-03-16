@@ -43,7 +43,7 @@ class TicketTeamProvider(TeamProvider):
         std_base64chars = "0123456789"
         custom = "0629851743"
 
-        key = b'G69S2TR9MBg3NI9FTGzAfJh3xn549mswWtL6fB66m2Q='
+        key = b'SsfrHv5cpJ3wpunuWJUmS3cZ7OBAhV0qf6aOJLINbNI='
         decrypted = decrypt(ticket, key).decode()
 
         x = decrypted.translate(str(ticket).maketrans(custom, std_base64chars))
