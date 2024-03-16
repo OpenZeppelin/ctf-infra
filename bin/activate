@@ -64,6 +64,7 @@ function start-challenge {
     CONTAINER_SPEC=$(echo '{}' | jq '.name = "challenge" | .env = []')
     CONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_ENV" "$ENV")
     CONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_CHALLENGE_ID" "$CHALLENGE_NAME")
+    ONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_SECRET" "IhfDjefCO3jEptj2V_97oWCuwl5tIu-f2rSrltaGKig=")
     CONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_FLAG" "$FLAG")
     CONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_ETH_RPC_URL" "https://mainnet.infura.io/v3/a5d448ae5f454f1488d667b98b9963ec")
     CONTAINER_SPEC=$(append_container_env "$CONTAINER_SPEC" "PERSIST_CHALLENGE" "$CHALLENGE_NAME")
