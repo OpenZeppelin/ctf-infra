@@ -70,6 +70,7 @@ def format_starknet_args(args: LaunchAnvilInstanceArgs, anvil_id: str, port: int
     cmd_args += ["--host", "0.0.0.0"]
     cmd_args += ["--port", str(port)]
     cmd_args += ["--accounts", "2"]
+    cmd_args += ["--seed", "0"]
 
     return cmd_args
 

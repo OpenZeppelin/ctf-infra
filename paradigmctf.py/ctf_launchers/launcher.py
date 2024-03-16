@@ -127,8 +127,6 @@ class Launcher(abc.ABC):
 
             credentials = [["0x64b48806902a367c8598f4f95c305e8c1a1acba5f082d294a43793113115691", "0x71d7bb07b9a64f6f78ac4c816aff4da9"], ["0x78662e7352d062084b0010068b99288486c2d8b914f6e2a55ce945f8792c8b1", "0xe1406455b7d66b1690803be066cbe5e"]]
 
-            # credentials = self.get_credentials(web3.provider.endpoint_uri)
-
             challenge_addr = self.deploy_cairo(user_data, credentials)
             priv_key = credentials[1][1]
         elif self.type == "nitro":
