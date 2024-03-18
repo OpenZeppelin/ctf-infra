@@ -1,6 +1,6 @@
 # Ethernaut 2024 CTF Infra
 
-This repository contains all the infrastructure to host the Ethernaut CTF 2024, based on [Paradigm's CTF infrastructure]([https://ctf.paradigm.xyz](https://github.com/paradigmxyz/paradigm-ctf-infrastructure)).
+This repository contains all the infrastructure to host the Ethernaut CTF 2024, based on [Paradigm's CTF infrastructure](https://github.com/paradigmxyz/paradigm-ctf-infrastructure).
 
 ## Usage Local
 
