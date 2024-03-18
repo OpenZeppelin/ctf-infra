@@ -1,6 +1,6 @@
-# OpenZeppelin CTF Infra
+# Ethernaut 2024 CTF Infra
 
-This repository contains all the infrastructure to host the OpenZeppelin CTF, based on [Paradigm CTF](https://ctf.paradigm.xyz).
+This repository contains all the infrastructure to host the Ethernaut CTF 2024, based on [Paradigm's CTF infrastructure]([https://ctf.paradigm.xyz](https://github.com/paradigmxyz/paradigm-ctf-infrastructure)).
 
 ## Usage Local
 
@@ -8,7 +8,7 @@ To run the CTF infrastructure locally, simply run the following commands:
 
 ```bash
 cd paradigmctf.py
-docker compose up
+docker compose up -d
 ```
 
 To run the CTF infrastructure in kCTF, you'll need to do the following:
@@ -18,10 +18,10 @@ To run the CTF infrastructure in kCTF, you'll need to do the following:
 kctf cluster create --type kind local-cluster --start
 
 # build the image
-(cd paradigmctf.py; docker build us-docker.pkg.dev/idyllic-adviser-409615/openzeppelin/ctf-2023-server:latest)
+(cd paradigmctf.py; docker build ghcr.io/openzeppelin/ctf-infra:latest)
 
 # push the image to kind
-kind load docker-image --name "${CLUSTER_NAME}" "us-docker.pkg.dev/idyllic-adviser-409615/openzeppelin/ctf-2023-server:latest"
+kind load docker-image --name "${CLUSTER_NAME}" "ghcr.io/openzeppelin/ctf-infra:latest"
 
 # create all the resources
 kubectl apply kubernetes/ctf-server.yaml
@@ -42,52 +42,9 @@ kctf chal debug port-forward --port 1337 --local-port 1337 &
 nc 127.0.0.1 1337
 ```
 
-## Usage Server
-
-To run the CTF infrastructure in kCTF, you'll need to do the following:
-
-```bash
-# get the challenges
-git clone ssh://git@github.com/openzeppelin/ctf-2023.git & cd ctf-2023
-
-# pull the infrastructure
-docker pull us-docker.pkg.dev/idyllic-adviser-409615/openzeppelin/ctf-2023-server:latest
-
-# umask allow copying executable files
-umask 0022
-
-# enable docker integration with Google Container Registry
-gcloud auth configure-docker
-
-# get and activate kctf
-curl -sSL https://kctf.dev/sdk | tar xz
-source kctf/activate
-
-# create and start gke cluster
-kctf cluster create --project idyllic-adviser-409615 --domain openzeppelin.kctf.cloud --start remote-cluster
-
-# create all the resources
-kubectl apply -f infrastructure/kubernetes/ctf-server.yaml
-
-# port forward the anvil proxy for local access
-kubectl port-forward service/anvil-proxy 8545:8545 &
-```
-
-Now you'll be able to build and test challenges in kCTF:
-```bash
-# start the challenge
-kctf chal start
-
-# port forward the challenge
-kctf chal debug port-forward --port 1337 --local-port 1337 &
-
-# connect to the challenge
-nc 127.0.0.1 1337
-```
-
 ## Images
 
-Paradigm CTF is hosted using [kCTF](https://google.github.io/kctf/), a Kubernetes-based CTF platform. Follow the kCTF setup instructions to get a local cluster running on your computer.
+This infrastructure runs on [kCTF](https://google.github.io/kctf/), a Kubernetes-based CTF platform. Follow the kCTF setup instructions to get a local cluster running on your computer.
 
 ### kctf-challenge
 The [kctf-challenge](/kctf-challenge/) image acts as a standard image on top of the kCTF base image. It's optional, not required, but provides the following features:
@@ -106,15 +63,3 @@ The [forge-ctf](/forge-ctf/) library provides two Forge scripts which can be use
 The `CTFDeployment` script can be overridden to implement the `deploy(address system, address player) internal returns (address challenge)` function. It defaults to using the `test [...] test junk` mnemonic, but will read from the `MNEMONIC` environment variable. It writes the address that the challenge was deployed at to `/tmp/deploy.txt`, or the value of `OUTPUT_FILE`.
 
 The `CTFSolver` script can be overriden to implement the `solve(address challenge, address player)` function. The challenge address must be specified as the `CHALLENGE` environment variable. The player private key defaults to the first key generated from the `test [...] junk` mnemonic, but can be overridden with `PLAYER`.
-
-## Templates
-
-Templates are provided for you to quickly get started with creating challenges of your own. To use them, copy the [templates](/templates/) into `kctf/challenge-templates`. Then, you will be able to use `kctf chal create --template eth-pwn`.
-
-## TODO
-Huff support is pretty bad, needs the following changes upstream:
-- https://github.com/huff-language/foundry-huff/issues/47
-- Needs to support broadcasting from specific address
-- Needs to stop using hexdump to generate some random bytes
-
-Kubernetes support is not complete yet
